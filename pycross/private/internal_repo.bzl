@@ -31,12 +31,12 @@ def exec_internal_tool(rctx, tool, args, *, flagfile_param = "--flagfile", flagf
       exec_result
     """
 
-    # interpreter_path.txt holds an absolute path inside the output base, so
-    # recording it as an input would make every caller's repo contents cache
-    # entry specific to one machine and output base. Record the
-    # machine-independent interpreter_identity.txt instead, so that callers
-    # still re-run when the interpreter changes. rctx.path(Label) records the
-    # file it resolves, so reach interpreter_path.txt as a sibling instead.
+    # interpreter_path.txt holds host-specific paths, so recording it as an
+    # input would make every caller's repo contents cache entry specific to
+    # one machine and output base. Record the machine-independent
+    # interpreter_identity.txt instead, so that callers still re-run when
+    # the interpreter changes. rctx.path(Label) records the file it resolves,
+    # so reach interpreter_path.txt as a sibling instead.
     interpreter_identity_file = rctx.path(Label("@{}//:interpreter_identity.txt".format(INTERNAL_REPO_NAME)))
     rctx.read(interpreter_identity_file)
     interpreter_path_file = interpreter_identity_file.dirname.get_child("interpreter_path.txt")
@@ -84,7 +84,7 @@ runpy.run_path("{tool}", run_name="__main__")
         quiet = quiet,
     )
 
-    # These files embed absolute paths and are not needed after execution;
+    # These files embed host-specific paths and are not needed after execution;
     # leaving them behind would make the calling repo's contents host-specific.
     rctx.delete(wrapper_file)
     if flagfile:
@@ -136,7 +136,7 @@ def _resolve_python_interpreter(rctx):
     return python_interpreter.realpath
 
 def _interpreter_identity(rctx, python_executable):
-    """Describes the interpreter without referring to the output base.
+    """Describes the interpreter without referring to a host-specific path.
 
     Args:
       rctx: Handle to the rule repository context.
